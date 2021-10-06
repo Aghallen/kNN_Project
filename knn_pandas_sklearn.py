@@ -1,29 +1,13 @@
+from data_reader import DataReader
 import math
-
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+
+# Format output from numpy arrays.
 np.set_printoptions(formatter={'float': lambda x: "{0:.1f}".format(x).rjust(4)})
 
-def read_data(read_from_file=True):
-    names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'Class']
-    if read_from_file:
-        import pathlib
-        filename = 'iris.data'  # Located in the same directory as the current file.
-        full_filename = str(pathlib.Path().absolute().joinpath(filename))
-        df = pd.read_csv(full_filename, names=names)  # pandas.core.frame.DataFrame
-    else:
-        url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
-        df = pd.read_csv(url, names=names)  # pandas.core.frame.DataFrame
-
-    X = df.iloc[:, :-1].values
-    y = df.iloc[:, 4].values
-
-    return X, y
-
-
-X, y = read_data()
-# print(X.shape); print(y.shape); exit()
+X, y = DataReader().read()
+print(X.shape); print(y.shape); exit()
+exit()
 
 # print(dataset.head(3));print();print(X[:3]);print();print(y[:3])
 
@@ -43,8 +27,8 @@ X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
 
 # print(X[:5]); print(); print(X_train[:5]); print()
-from math import *
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 
 @dataclass
 class DistanceData:
