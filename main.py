@@ -1,30 +1,54 @@
-import my_iris
-import my_splitter as ms
+# https://stackabuse.com/k-nearest-neighbors-algorithm-in-python-and-scikit-learn/
+from data_reader import DataReader
+from my_classifier import MyClassifier
 
-iris= my_iris.Iris.load_iris()
-X = iris.data
-y = iris.target
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from my_splitter import train_test_split
 
-X_train, X_test, y_train, y_test = ms.train_test_split(X, y, test_size=0.1, random_state=42)
-print(f'X_train.shape: {X_train.shape}')
-print(f'X_test.shape: {X_test.shape}')
 
-# print(X)
+# Format output of numpy arrays.
+np.set_printoptions(formatter={'float': lambda x: "{0:.1f}".format(x).rjust(4)})
+
+X, y = DataReader().read()
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=2)
+
+scaler = StandardScaler()
+scaler.fit(X)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+c = MyClassifier(5)
+c.fit(X_train, y_train)
+my_y_pred = c.predict(X_test)
+
+from sklearn.metrics import classification_report, confusion_matrix
+print(confusion_matrix(y_test, my_y_pred))
+print()
+print(classification_report(y_test, my_y_pred))
+
+exit()
+print('my_y_pred')
+for single_y_pred in my_y_pred:
+    print(single_y_pred)
+print()
+# exit()
+
+from sklearn.neighbors import KNeighborsClassifier
+classifier = KNeighborsClassifier(n_neighbors=5)
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+print('y_pred')
+for single_y_pred in y_pred:
+    print(single_y_pred)
+print()
 exit()
 
-# rows = []
-# for row in X:
-#     elements = [str(element) for element in row]
-#     single_row = '[' + ', '.join(elements) +']'
-#     rows.append(single_row)
-#
-# all_rows = '[' + ',\n'.join(rows) + ']'
-# print(all_rows)
-# print(X)
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-# Print shape of data to confirm data is loaded
-# print(iris.data)
-# print(y)
+from sklearn.metrics import classification_report, confusion_matrix
+print(confusion_matrix(y_test, y_pred))
+print()
+print(classification_report(y_test, y_pred))
 
 
-# One thread per python interpreter
+
