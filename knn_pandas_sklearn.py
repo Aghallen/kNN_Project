@@ -1,27 +1,23 @@
+# https://stackabuse.com/k-nearest-neighbors-algorithm-in-python-and-scikit-learn/
 from data_reader import DataReader
 import math
 import numpy as np
 
-# Format output from numpy arrays.
+# Format output of numpy arrays.
 np.set_printoptions(formatter={'float': lambda x: "{0:.1f}".format(x).rjust(4)})
 
 X, y = DataReader().read()
-print(X.shape); print(y.shape); exit()
-exit()
+# print(X.shape); print(y.shape); exit()
 
-# print(dataset.head(3));print();print(X[:3]);print();print(y[:3])
-
-# from sklearn.model_selection import train_test_split
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 
 from my_splitter import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=2)
 
 # print(y_test);exit()
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-scaler.fit(X_train)
+scaler.fit(X)
 
 X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
@@ -31,16 +27,17 @@ from dataclasses import dataclass
 
 
 @dataclass
-class DistanceData:
-    features: list
-    target: str
-    distance: float
+class TrainingData:
+    features: list      # Features of a training sample
+    label: str          # Label of a training sample
+    distance: float     # Distance between a test sample and this trainings sample
+
 
 @dataclass
 class PredictionData:
-    predicted: str
-    features: list  # The features of a test sample. Used for debug.
-    neighbors: list
+    predicted_label: str
+    features: list      # The features of a test sample. Used for debug.
+    neighbors: list     # The features of the k nearest neighbors. Used for debug.
 
 
 # exit()
@@ -48,18 +45,18 @@ from statistics import mode
 class MyClassifier:
     def __init__(self, n_neighbors=5):
         self.n_neighbors = n_neighbors
+        self.distance_data_list = []
+        self.prediction_data_list = []
 
     def fit(self, X_train, y_train):
-        self.distance_data_list = []
-        self.predicted_list = []
-        for x, y in zip(X_train, y_train):
-            dd = DistanceData(x, y, -1)
-            self.distance_data_list.append(dd)
+        for features, label in zip(X_train, y_train):
+            td = TrainingData(features, label, -1)
+            self.distance_data_list.append(td)
 
-    def predict_row(self, y_test_row):
+    def predict_test_sample(self, test_sample_features):
         # Calculate distance to every sample in X_train.
         for dd in self.distance_data_list:
-            squared = [(x1 - x2) * (x1 - x2) for x1, x2 in zip(dd.features, y_test_row)]
+            squared = [(x1 - x2) * (x1 - x2) for x1, x2 in zip(dd.features, test_sample_features)]
             dd.distance = math.sqrt(sum(squared))
 
         # Select the k closest neighbors.
@@ -67,23 +64,31 @@ class MyClassifier:
         k_neighbors = sorted_by_distance[:self.n_neighbors]
 
         # Select most frequent neighbor of the k closest.
-        predicted = mode([x.target for x in k_neighbors])
-        tg = PredictionData(predicted, y_test_row, k_neighbors)
-        self.predicted_list.append(tg)
+        predicted_label = mode([x.label for x in k_neighbors])
+        pd = PredictionData(predicted_label, test_sample_features, k_neighbors)
+        self.prediction_data_list.append(pd)
 
     def predict(self, X_test):
-        for test_row in X_test:
-            self.predict_row(test_row)
+        for test_sample in X_test:
+            self.predict_test_sample(test_sample)
 
-        # for elem in self.predicted_list:
+        # for elem in self.prediction_data_list:
         #     print(elem.features, elem.predicted)
 
-        y_pred = [x.predicted for x in self.predicted_list]
+        y_pred = [x.predicted_label for x in self.prediction_data_list]
         return y_pred
+
 
 c = MyClassifier(5)
 c.fit(X_train, y_train)
 my_y_pred = c.predict(X_test)
+
+from sklearn.metrics import classification_report, confusion_matrix
+print(confusion_matrix(y_test, my_y_pred))
+print()
+print(classification_report(y_test, my_y_pred))
+
+exit()
 print('my_y_pred')
 for single_y_pred in my_y_pred:
     print(single_y_pred)
